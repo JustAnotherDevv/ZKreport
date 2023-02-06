@@ -1,15 +1,31 @@
 import { useState, useEffect, useContext } from "react";
 import { ethers } from "ethers";
 import Web3 from "web3";
-import { Web3ModalContext } from "../contexts/Web3ModalProvider";
+// import { Web3ModalContext } from "../contexts/Web3ModalProvider";
 import lighthouse from "@lighthouse-web3/sdk";
 import { getAccount } from "@wagmi/core";
 
 function Home() {
-  const { account, connect, disconnect, chainId, web3 } =
-    useContext(Web3ModalContext);
+  // const { account, connect, disconnect, chainId, web3 } =
+  // useContext(Web3ModalContext);
   const [topToken, setTopToken] = useState("0");
   const [BottomToken, setBottomToken] = useState("0");
+  const [fileList, setFileList] = useState([]);
+
+  const listItems = fileList.map((i, index) => (
+    <tr className="hover self-center center" key={index}>
+      <td className="">{i.fileName}</td>
+      <td className="">{i.mimeType}</td>
+      <td className="">
+        <button
+          className="btn btn-sm btn-success"
+          onClick={() => window.open(i.url)}
+        >
+          Get
+        </button>
+      </td>
+    </tr>
+  ));
 
   const progressCallback = (progressData) => {
     let percentageDone =
@@ -194,19 +210,82 @@ function Home() {
     */
   };
 
-  async function uploads() {
+  async function getMyUploads() {
     console.log(await lighthouse.getUploads(getAccount().address));
+    setFileList(
+      await (
+        await lighthouse.getUploads(getAccount().address)
+      ).data.uploads
+    );
   }
 
   useEffect(() => {
     (async () => {
-      //await updateBalance();
       console.log(getAccount().address);
+      await getMyUploads();
     })();
   }, []);
 
   return (
-    <div className="flex justify-center items-center flex-col h-screen rounded">
+    <div className="flex justify-around items-center flex-col h-screen rounded bg-base-300">
+      <div className="stats shadow mt-24">
+        <div className="stat">
+          <div className="stat-figure text-primary"></div>
+          <div className="stat-title">Your projects</div>
+          <div className="stat-value text-success">6</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat-figure text-secondary"></div>
+          <div className="stat-title">Your files</div>
+          <div className="stat-value text-gray-400 ">17</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat-figure text-secondary"></div>
+          <div className="stat-title">Shared with you</div>
+          <div className="stat-value text-gray-400">22</div>
+        </div>
+      </div>
+      <div className="">
+        <h2 className="py-5 text-3xl">Your projects</h2>
+        <table className="table w-1/2 text-white">
+          <thead className="bg-success">
+            <tr>
+              <th className="bg-transparent">Name</th>
+              <th className="bg-transparent">File type</th>
+              <th className="bg-transparent"></th>
+            </tr>
+          </thead>
+          <tbody>{listItems.length != -1 ? "Loading…" : listItems}</tbody>
+        </table>
+      </div>
+      <div className="">
+        <h2 className="py-5 text-3xl">Your files</h2>
+        <table className="table w-1/2 text-white">
+          <thead className="bg-success">
+            <tr>
+              <th className="bg-transparent">Name</th>
+              <th className="bg-transparent">File type</th>
+              <th className="bg-transparent"></th>
+            </tr>
+          </thead>
+          <tbody>{listItems.length == 0 ? "Loading…" : listItems}</tbody>
+        </table>
+      </div>
+      <div className="">
+        <h2 className="py-5 text-3xl">Shared with you</h2>
+        <table className="table w-1/2 text-white">
+          <thead className="bg-success">
+            <tr>
+              <th className="bg-transparent">Name</th>
+              <th className="bg-transparent">File type</th>
+              <th className="bg-transparent"></th>
+            </tr>
+          </thead>
+          <tbody>{listItems.length != -1 ? "Loading…" : listItems}</tbody>
+        </table>
+      </div>
       <p className="text-gray-600 pt-5">Upload your audit report below</p>
       <input onChange={(e) => deploy(e)} type="file" />
       <input onChange={(e) => deployEncrypted(e)} type="file" />
@@ -225,7 +304,7 @@ function Home() {
       </button>
       <button
         onClick={() => {
-          uploads();
+          getMyUploads();
         }}
       >
         Get my files
