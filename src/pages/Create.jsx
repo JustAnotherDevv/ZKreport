@@ -1,16 +1,19 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { ethers } from "ethers";
 import Web3 from "web3";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import lighthouse from "@lighthouse-web3/sdk";
 import { getAccount } from "@wagmi/core";
+import { defaultMd } from "../utils";
+import ReactMarkdown from "react-markdown";
+// import * as auditTemplate from "./../auditTemplate.md";
 
-function Home() {
-  // const { account, connect, disconnect, chainId, web3 } =
-  // useContext(Web3ModalContext);
-  const [topToken, setTopToken] = useState("0");
-  const [BottomToken, setBottomToken] = useState("0");
+function Create() {
   const [fileList, setFileList] = useState([]);
+  const [auditText, setAuditText] = useState("");
+  const [activeTab, setActiveTab] = useState(true);
+  const [fileURL, setFileURL] = useState(null);
+  const textAreaRef = useRef(null);
 
   const listItems = fileList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
@@ -27,13 +30,25 @@ function Home() {
     </tr>
   ));
 
-  const progressCallback = (progressData) => {
+  async function progressCallback(progressData) {
     let percentageDone =
       100 - (progressData?.total / progressData?.uploaded)?.toFixed(2);
     console.log(percentageDone);
-  };
+  }
 
   const deploy = async (e) => {
+    // e = URL.createObjectURL(new Blob([auditText], { type: "text/html" }));
+
+    console.log(e);
+
+    (e.target.files = [
+      await new File([auditText], "foo.txt", {
+        type: "text/plain",
+      }),
+    ]),
+      //e.target.files = fileList;
+      console.log(auditText, "\n", e);
+
     // Push file to lighthouse node
     // Both file and folder supported by upload function
     const output = await lighthouse.upload(
@@ -99,8 +114,6 @@ function Home() {
       Note: Hash in response is CID.
     */
   };
-
-  const [fileURL, setFileURL] = useState(null);
 
   const sign_auth_message = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -219,98 +232,100 @@ function Home() {
     );
   }
 
+  function switchTab(v) {
+    setActiveTab(v);
+  }
+
+  const handleTextAreaChange = (event) => {
+    setAuditText(event.target.value);
+  };
+
   useEffect(() => {
     (async () => {
       console.log(getAccount().address);
-      await getMyUploads();
+
+      import("./../auditTemplate.md").then((res) => {
+        fetch(res.default)
+          .then((response) => response.text())
+          //   .then((text) => console.log(text));
+          .then((text) => setAuditText(text));
+      });
+
+      //   await getMyUploads();
     })();
   }, []);
 
   return (
-    <div className="flex justify-around items-center flex-col h-screen rounded bg-base-300">
-      <div className="stats shadow mt-24">
-        <div className="stat">
-          <div className="stat-figure text-primary"></div>
-          <div className="stat-title">Your projects</div>
-          <div className="stat-value text-success">6</div>
+    <div className="flex justify-start items-center flex-col bg-base-300 min-h-screen">
+      <div className="h-24"></div>
+      <div className="flex justify-around items-center flex-col">
+        <div className="flex flex-col items-center">
+          <h2 className="py-5 text-3xl">
+            Add new audit report from files or create new one with markdown
+          </h2>
+          <div className="tabs">
+            <a
+              className={`tab tab-lifted ${activeTab ? "tab-active" : ""}`}
+              onClick={() => switchTab(true)}
+            >
+              Edit
+            </a>
+            <a
+              className={`tab tab-lifted ${activeTab ? "" : "tab-active"}`}
+              onClick={() => switchTab(false)}
+            >
+              Preview
+            </a>
+          </div>
+          <div className="bg-base-200 p-10 rounded-lg w-full flex flex-col items-center min-h-16">
+            {!activeTab ? (
+              <div className="prose text-left bg-base-200">
+                <ReactMarkdown>{auditText}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="w-full h-full">
+                <textarea
+                  className="textarea textarea-bordered w-full h-screen"
+                  placeholder="Paste your audit report markdown here."
+                  value={auditText}
+                  ref={textAreaRef}
+                  onChange={handleTextAreaChange}
+                ></textarea>
+              </div>
+            )}
+          </div>
         </div>
-
-        <div className="stat">
-          <div className="stat-figure text-secondary"></div>
-          <div className="stat-title">Your files</div>
-          <div className="stat-value text-gray-400 ">17</div>
-        </div>
-
-        <div className="stat">
-          <div className="stat-figure text-secondary"></div>
-          <div className="stat-title">Shared with you</div>
-          <div className="stat-value text-gray-400">22</div>
-        </div>
+        <button className="btn btn-success my-8" onClick={(e) => deploy(e)}>
+          Upload
+        </button>
       </div>
-      <div className="">
-        <h2 className="py-5 text-3xl">Your projects</h2>
-        <table className="table w-1/2 text-white">
-          <thead className="bg-success">
-            <tr>
-              <th className="bg-transparent">Name</th>
-              <th className="bg-transparent">File type</th>
-              <th className="bg-transparent"></th>
-            </tr>
-          </thead>
-          <tbody>{listItems.length != -1 ? "Loading…" : listItems}</tbody>
-        </table>
+      <div>
+        <p className="text-gray-600 pt-5">Upload your audit report below</p>
+        <input onChange={(e) => deploy(e)} type="file" />
+        <input onChange={(e) => deployEncrypted(e)} type="file" />
+        <button onClick={() => decrypt()}>decrypt</button>
+        {fileURL ? (
+          <a href={fileURL} target="_blank">
+            viewFile
+          </a>
+        ) : null}
+        <button
+          onClick={() => {
+            applyAccessConditions();
+          }}
+        >
+          Apply Access Consitions
+        </button>
+        <button
+          onClick={() => {
+            getMyUploads();
+          }}
+        >
+          Get my files
+        </button>
       </div>
-      <div className="">
-        <h2 className="py-5 text-3xl">Your files</h2>
-        <table className="table w-1/2 text-white">
-          <thead className="bg-success">
-            <tr>
-              <th className="bg-transparent">Name</th>
-              <th className="bg-transparent">File type</th>
-              <th className="bg-transparent"></th>
-            </tr>
-          </thead>
-          <tbody>{listItems.length == 0 ? "Loading…" : listItems}</tbody>
-        </table>
-      </div>
-      <div className="">
-        <h2 className="py-5 text-3xl">Shared with you</h2>
-        <table className="table w-1/2 text-white">
-          <thead className="bg-success">
-            <tr>
-              <th className="bg-transparent">Name</th>
-              <th className="bg-transparent">File type</th>
-              <th className="bg-transparent"></th>
-            </tr>
-          </thead>
-          <tbody>{listItems.length != -1 ? "Loading…" : listItems}</tbody>
-        </table>
-      </div>
-      <p className="text-gray-600 pt-5">Upload your audit report below</p>
-      <input onChange={(e) => deploy(e)} type="file" />
-      <input onChange={(e) => deployEncrypted(e)} type="file" />
-      <button onClick={() => decrypt()}>decrypt</button>
-      {fileURL ? (
-        <a href={fileURL} target="_blank">
-          viewFile
-        </a>
-      ) : null}
-      <button
-        onClick={() => {
-          applyAccessConditions();
-        }}
-      >
-        Apply Access Consitions
-      </button>
-      <button
-        onClick={() => {
-          getMyUploads();
-        }}
-      >
-        Get my files
-      </button>
     </div>
   );
 }
 
-export default Home;
+export default Create;

@@ -8,13 +8,10 @@ import {
   modalConnectors,
   walletConnectProvider,
 } from "@web3modal/ethereum";
-
 import { Web3Modal, Web3Button } from "@web3modal/react";
-
-// import { useConnected, ConnectButton, useConnectModal } from "@web3modal/react";
-
 import { configureChains, createClient, WagmiConfig, useAccount } from "wagmi";
 import Home from "./pages/Home";
+import Create from "./pages/Create";
 import Web3 from "web3";
 import {
   mainnet,
@@ -49,8 +46,13 @@ function App() {
       element: <Home />,
     },
     {
-      path: "/test",
-      element: <div>Hello world!</div>,
+      path: "/create",
+      element: <Create />,
+    },
+    ,
+    {
+      path: "/reports",
+      element: <Home />,
     },
   ]);
 

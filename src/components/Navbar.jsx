@@ -13,7 +13,7 @@ function Navbar() {
       <div className="flex-none">
         <ul className="menu menu-horizontal p-0">
           <li>
-            <a>Home</a>
+            <a>Dashboard</a>
           </li>
           <li>
             <a>Audits</a>
