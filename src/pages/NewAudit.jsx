@@ -7,13 +7,16 @@ import { getAccount } from "@wagmi/core";
 import { defaultMd } from "../utils";
 import ReactMarkdown from "react-markdown";
 // import * as auditTemplate from "./../auditTemplate.md";
+import AuditReport from "../ABI/AuditReport_metadata.json";
 
-function Create() {
+function NewAudit() {
   const [fileList, setFileList] = useState([]);
   const [auditText, setAuditText] = useState("");
-  const [activeTab, setActiveTab] = useState(true);
+  const [chosenAuditor, setChosenAuditor] = useState("");
   const [fileURL, setFileURL] = useState(null);
   const textAreaRef = useRef(null);
+
+  const metamaskProvider = new ethers.providers.Web3Provider(window.ethereum);
 
   const listItems = fileList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
@@ -95,6 +98,13 @@ function Create() {
        - signedMessage: message signed by the owner of publicKey
        - uploadProgressCallback: function to get progress (optional)
     */
+
+    e.target.files = [
+      await new File([fileURL], `${getAccount().address}.zip`, {
+        type: "application/x-zip-compressed",
+      }),
+    ];
+
     const sig = await encryptionSignature();
     const response = await lighthouse.uploadEncrypted(
       e,
@@ -104,6 +114,22 @@ function Create() {
       progressCallback
     );
     console.log(response);
+
+    let networkProvider = ethers.getDefaultProvider(
+      `https://api.hyperspace.node.glif.io/rpc/v1`
+    );
+    let auditContract = new ethers.Contract(
+      `${import.meta.env.VITE_DEPLOYED_AUDIT_REPORT_ADDRESS}`,
+      AuditReport.output.abi,
+      metamaskProvider.getSigner()
+    );
+
+    const tx = await auditContract.addAudit(
+      response.data.Hash,
+      "test",
+      chosenAuditor
+    );
+    console.log(tx);
     /*
       output:
         {
@@ -237,7 +263,7 @@ function Create() {
   }
 
   const handleTextAreaChange = (event) => {
-    setAuditText(event.target.value);
+    setChosenAuditor(event.target.value);
   };
 
   useEffect(() => {
@@ -256,47 +282,32 @@ function Create() {
   }, []);
 
   return (
-    <div className="flex justify-start items-center flex-col bg-base-300 min-h-screen">
-      <div className="h-24"></div>
+    <div className="flex justify-around items-center flex-col bg-base-300 min-h-screen">
       <div className="flex justify-around items-center flex-col">
         <div className="flex flex-col items-center">
-          <h2 className="py-5 text-3xl">
-            Add new audit report from files or create it from scratch using
-            markdown
+          <h2 className="py-16 text-3xl">
+            Begin new audit by selecting zipped code repo and the auditor
+            address
           </h2>
-          <div className="tabs">
-            <a
-              className={`tab tab-lifted ${activeTab ? "tab-active" : ""}`}
-              onClick={() => switchTab(true)}
-            >
-              Edit
-            </a>
-            <a
-              className={`tab tab-lifted ${activeTab ? "" : "tab-active"}`}
-              onClick={() => switchTab(false)}
-            >
-              Preview
-            </a>
-          </div>
-          <div className="bg-base-200 p-10 rounded-lg w-full flex flex-col items-center min-h-16">
-            {!activeTab ? (
-              <div className="prose text-left bg-base-200">
-                <ReactMarkdown>{auditText}</ReactMarkdown>
-              </div>
-            ) : (
-              <div className="w-full h-full">
-                <textarea
-                  className="textarea textarea-bordered w-full h-screen"
-                  placeholder="Paste your audit report markdown here."
-                  value={auditText}
-                  ref={textAreaRef}
-                  onChange={handleTextAreaChange}
-                ></textarea>
-              </div>
-            )}
-          </div>
+          <input
+            type="file"
+            className="file-input file-input-bordered file-input-success w-full max-w-xs"
+            accept=".zip, .rar"
+            onChange={(e) => setFileURL(e.target.files[0])}
+          />
+          <input
+            type="text"
+            placeholder="Insert auditor wallet..."
+            className="input input-bordered w-full max-w-xs my-8"
+            value={chosenAuditor}
+            ref={textAreaRef}
+            onChange={handleTextAreaChange}
+          />
         </div>
-        <button className="btn btn-success my-8" onClick={(e) => deploy(e)}>
+        <button
+          className="btn btn-success my-8"
+          onClick={(e) => deployEncrypted(e)}
+        >
           Upload
         </button>
       </div>
@@ -304,4 +315,4 @@ function Create() {
   );
 }
 
-export default Create;
+export default NewAudit;

@@ -1,6 +1,11 @@
 import { useState } from "react";
 import logo from "./logo.svg";
-import { createBrowserRouter, RouterProvider, Route } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Route,
+  createRoutesFromElements,
+} from "react-router-dom";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import {
@@ -12,6 +17,7 @@ import { Web3Modal, Web3Button } from "@web3modal/react";
 import { configureChains, createClient, WagmiConfig, useAccount } from "wagmi";
 import Home from "./pages/Home";
 import Create from "./pages/Create";
+import NewAudit from "./pages/NewAudit";
 import Web3 from "web3";
 import {
   mainnet,
@@ -22,7 +28,22 @@ import {
 } from "@wagmi/core/chains";
 
 function App() {
-  const chains = [polygonMumbai];
+  const hyperspace = {
+    id: 3141,
+    name: "Hyperspace",
+    network: "Filecoin - Hyperspace testnet",
+    nativeCurrency: {
+      decimals: 18,
+      name: "tFil",
+      symbol: "tFil",
+    },
+    rpcUrls: {
+      public: { http: ["https://api.hyperspace.node.glif.io/rpc/v1"] },
+      default: { http: ["https://api.hyperspace.node.glif.io/rpc/v1"] },
+    },
+  };
+
+  const chains = [hyperspace];
 
   // Wagmi client
   const { provider } = configureChains(chains, [
@@ -40,21 +61,15 @@ function App() {
   // Web3Modal Ethereum Client
   const ethereumClient = new EthereumClient(wagmiClient, chains);
 
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Home />,
-    },
-    {
-      path: "/create",
-      element: <Create />,
-    },
-    ,
-    {
-      path: "/reports",
-      element: <Home />,
-    },
-  ]);
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={<Navbar />}>
+        <Route path="home" element={<Home />} />
+        <Route path="create" element={<Create />} />
+        <Route path="newAudit" element={<NewAudit />} />
+      </Route>
+    )
+  );
 
   return (
     <div className="App">
@@ -66,7 +81,6 @@ function App() {
       />
       <WagmiConfig client={wagmiClient}>
         <div className="flex flex-col h-screen justify-between">
-          <Navbar />
           <main className="">
             <RouterProvider router={router} />
           </main>
