@@ -4,6 +4,7 @@ import Web3 from "web3";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import lighthouse from "@lighthouse-web3/sdk";
 import { getAccount } from "@wagmi/core";
+import AuditReport from "../ABI/AuditReport_metadata.json";
 
 function Home() {
   // const { account, connect, disconnect, chainId, web3 } =
@@ -219,10 +220,29 @@ function Home() {
     );
   }
 
+  async function test() {
+    let networkProvider = ethers.getDefaultProvider(
+      `https://api.hyperspace.node.glif.io/rpc/v1`
+    );
+    let auditContract = new ethers.Contract(
+      `${import.meta.env.VITE_DEPLOYED_AUDIT_REPORT_ADDRESS}`,
+      AuditReport.output.abi,
+      networkProvider
+    );
+    console.log(auditContract);
+    const tx = await auditContract.getUser(getAccount().address);
+    console.log(tx);
+    console.log(await auditContract.getOwnedAudits(getAccount().address));
+    console.log(
+      await auditContract.getPermissionedAudits(getAccount().address)
+    );
+  }
+
   useEffect(() => {
     (async () => {
       console.log(getAccount().address);
       await getMyUploads();
+      await test();
     })();
   }, []);
 
