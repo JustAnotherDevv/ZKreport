@@ -9,9 +9,11 @@ import AuditReport from "../ABI/AuditReport_metadata.json";
 function Home() {
   // const { account, connect, disconnect, chainId, web3 } =
   // useContext(Web3ModalContext);
-  const [topToken, setTopToken] = useState("0");
-  const [BottomToken, setBottomToken] = useState("0");
+  const [audits, setAudits] = useState("0");
+  const [files, setFiles] = useState("0");
   const [fileList, setFileList] = useState([]);
+  const [auditList, setAuditList] = useState([]);
+  const [sharedList, setSharedList] = useState([]);
 
   const listItems = fileList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
@@ -22,11 +24,49 @@ function Home() {
           className="btn btn-sm btn-success"
           onClick={() => window.open(i.url)}
         >
-          Get
+          Open
         </button>
       </td>
     </tr>
   ));
+
+  const listAudits = auditList.map((i, index) => (
+    <tr className="hover self-center center" key={index}>
+      <td className="">{i.fileName}</td>
+      <td className="">{i.mimeType}</td>
+      <td className="">
+        <button
+          className="btn btn-sm btn-success"
+          onClick={() => window.open(i.url)}
+        >
+          Open
+        </button>
+      </td>
+    </tr>
+  ));
+
+  const listShared = sharedList.map((i, index) => (
+    <tr className="hover self-center center" key={index}>
+      <td className="">{i.fileName}</td>
+      <td className="">{i.mimeType}</td>
+      <td className="">
+        <button
+          className="btn btn-sm btn-success"
+          onClick={() => window.open(i.url)}
+        >
+          Open
+        </button>
+      </td>
+    </tr>
+  ));
+
+  const listEmpty = (
+    <tr className="hover self-center center">
+      <td className="">Empty</td>
+      <td className=""></td>
+      <td className=""></td>
+    </tr>
+  );
 
   const progressCallback = (progressData) => {
     let percentageDone =
@@ -232,8 +272,10 @@ function Home() {
     console.log(auditContract);
     const tx = await auditContract.getUser(getAccount().address);
     console.log(tx);
-    console.log(await auditContract.getOwnedAudits(getAccount().address));
-    console.log(
+    setAudits(tx[0].toNumber());
+    setFiles(tx[1].toNumber());
+    setAuditList(await auditContract.getOwnedAudits(getAccount().address));
+    setSharedList(
       await auditContract.getPermissionedAudits(getAccount().address)
     );
   }
@@ -247,42 +289,51 @@ function Home() {
   }, []);
 
   return (
-    <div className="flex justify-around items-center flex-col h-screen rounded bg-base-300">
-      <div className="stats shadow mt-24">
+    <div className="flex justify-start items-center flex-col min-h-screen rounded bg-base-300">
+      <div className="stats shadow mt-32 mb-8">
         <div className="stat">
           <div className="stat-figure text-primary"></div>
-          <div className="stat-title">Your projects</div>
-          <div className="stat-value text-success">6</div>
-        </div>
-
-        <div className="stat">
-          <div className="stat-figure text-secondary"></div>
-          <div className="stat-title">Your files</div>
-          <div className="stat-value text-gray-400 ">17</div>
+          <div className="stat-title">Your audits</div>
+          <div className="stat-value text-success">{audits}</div>
         </div>
 
         <div className="stat">
           <div className="stat-figure text-secondary"></div>
           <div className="stat-title">Shared with you</div>
-          <div className="stat-value text-gray-400">22</div>
+          <div className="stat-value text-success ">{files}</div>
+        </div>
+      </div>
+      <div className="flex w-2/3 justify-between gap-12">
+        <div className="w-full flex flex-col items-center">
+          <h2 className="py-5 text-3xl">Your audits</h2>
+          <table className="table w-full text-white">
+            <thead className="bg-success">
+              <tr>
+                <th className="bg-transparent">Name</th>
+                <th className="bg-transparent">File type</th>
+                <th className="bg-transparent"></th>
+              </tr>
+            </thead>
+            <tbody>{listItems.length != -1 ? listEmpty : listAudits}</tbody>
+          </table>
+        </div>
+        <div className="w-full flex flex-col items-center ">
+          <h2 className="py-5 text-3xl w-full">Shared with you</h2>
+          <table className="table w-full text-white">
+            <thead className="bg-success">
+              <tr>
+                <th className="bg-transparent">Name</th>
+                <th className="bg-transparent">File type</th>
+                <th className="bg-transparent"></th>
+              </tr>
+            </thead>
+            <tbody>{listItems.length != -1 ? listEmpty : listShared}</tbody>
+          </table>
         </div>
       </div>
       <div className="">
-        <h2 className="py-5 text-3xl">Your projects</h2>
-        <table className="table w-1/2 text-white">
-          <thead className="bg-success">
-            <tr>
-              <th className="bg-transparent">Name</th>
-              <th className="bg-transparent">File type</th>
-              <th className="bg-transparent"></th>
-            </tr>
-          </thead>
-          <tbody>{listItems.length != -1 ? "Loading…" : listItems}</tbody>
-        </table>
-      </div>
-      <div className="">
         <h2 className="py-5 text-3xl">Your files</h2>
-        <table className="table w-1/2 text-white">
+        <table className="table w-full text-white">
           <thead className="bg-success">
             <tr>
               <th className="bg-transparent">Name</th>
@@ -290,22 +341,10 @@ function Home() {
               <th className="bg-transparent"></th>
             </tr>
           </thead>
-          <tbody>{listItems.length == 0 ? "Loading…" : listItems}</tbody>
+          <tbody>{listItems.length == 0 ? listEmpty : listItems}</tbody>
         </table>
       </div>
-      <div className="">
-        <h2 className="py-5 text-3xl">Shared with you</h2>
-        <table className="table w-1/2 text-white">
-          <thead className="bg-success">
-            <tr>
-              <th className="bg-transparent">Name</th>
-              <th className="bg-transparent">File type</th>
-              <th className="bg-transparent"></th>
-            </tr>
-          </thead>
-          <tbody>{listItems.length != -1 ? "Loading…" : listItems}</tbody>
-        </table>
-      </div>
+
       <p className="text-gray-600 pt-5">Upload your audit report below</p>
       <input onChange={(e) => deploy(e)} type="file" />
       <input onChange={(e) => deployEncrypted(e)} type="file" />
