@@ -27,6 +27,29 @@
       {
         "inputs": [
           {
+            "internalType": "uint256",
+            "name": "_index",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "_auditIdentifier",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+          }
+        ],
+        "name": "acceptAuditRequest",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
             "internalType": "string",
             "name": "_name",
             "type": "string"
@@ -43,6 +66,19 @@
           }
         ],
         "name": "addAudit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_index",
+            "type": "uint256"
+          }
+        ],
+        "name": "completeAudit",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -270,11 +306,11 @@
       ]
     },
     "contracts/AuditReport.sol": {
-      "keccak256": "0xa9df6031740a8acc6734ca1e79e7997dd565527a7e652780e0de08a3ea2d6026",
+      "keccak256": "0x486109e7327b6e53e37b013ef154b77b70fc163a3518b0f1f03a0aa2d98af06e",
       "license": "MIT",
       "urls": [
-        "bzz-raw://cb4ea19fe405ec25d164ce8c65a42071a1e6e90df92dd82e0a0a552082ebda76",
-        "dweb:/ipfs/Qmb7gZ19VfdRzYaBjE7LZ3h8JjL1qSkqew3oW3JGKoprNv"
+        "bzz-raw://bb8c36a28355b143cf51a2637388e14c9af11759b94a2b17071be6865b2212f9",
+        "dweb:/ipfs/QmXp1narPi7bgG9cvwiuNLKDvvgZXt73ZGXjKUY9s43qJR"
       ]
     }
   },

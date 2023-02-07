@@ -5,6 +5,14 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import lighthouse from "@lighthouse-web3/sdk";
 import { getAccount } from "@wagmi/core";
 import AuditReport from "../ABI/AuditReport_metadata.json";
+import { truncateStr } from "../utils";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Route,
+  Link,
+  Routes,
+} from "react-router-dom";
 
 function Home() {
   // const { account, connect, disconnect, chainId, web3 } =
@@ -15,16 +23,26 @@ function Home() {
   const [auditList, setAuditList] = useState([]);
   const [sharedList, setSharedList] = useState([]);
 
+  const ReportStatus = [
+    "STARTED",
+    "AWAITING",
+    "SHARED",
+    "COMPLETED",
+    "FINALIZED",
+  ];
+
   const listItems = fileList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
       <td className="">{i.fileName}</td>
       <td className="">{i.mimeType}</td>
       <td className="">
-        <button
-          className="btn btn-sm btn-success"
-          onClick={() => window.open(i.url)}
-        >
-          Open
+        <button className="btn btn-sm btn-success">
+          <a
+            href={`https://files.lighthouse.storage/viewFile/${i.cid}`}
+            target="_blank"
+          >
+            Open
+          </a>
         </button>
       </td>
     </tr>
@@ -32,14 +50,19 @@ function Home() {
 
   const listAudits = auditList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
-      <td className="">{i.fileName}</td>
-      <td className="">{i.mimeType}</td>
+      <td className="">{i[2].toNumber()}</td>
+      <td className="">{truncateStr(i[5])}</td>
+      <td className="">{ReportStatus[i[1]]}</td>
       <td className="">
-        <button
-          className="btn btn-sm btn-success"
-          onClick={() => window.open(i.url)}
-        >
-          Open
+        <button className="btn btn-sm btn-success">
+          <Link
+            className={``}
+            to={`/create/${i[2].toNumber()}/${i[0]}/${i[3]}/${
+              ReportStatus[i[1]]
+            }`}
+          >
+            <a className="">Open</a>
+          </Link>
         </button>
       </td>
     </tr>
@@ -47,20 +70,34 @@ function Home() {
 
   const listShared = sharedList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
-      <td className="">{i.fileName}</td>
-      <td className="">{i.mimeType}</td>
+      <td className="">{i[2].toNumber()}</td>
+      <td className="">{truncateStr(i[0])}</td>
+      <td className="">{ReportStatus[i[1]]}</td>
       <td className="">
-        <button
-          className="btn btn-sm btn-success"
-          onClick={() => window.open(i.url)}
-        >
-          Open
+        <button className="btn btn-sm btn-success">
+          <Link
+            className={``}
+            to={`/create/${i[2].toNumber()}/${i[0]}/${i[3]}/${
+              ReportStatus[i[1]]
+            }`}
+          >
+            <a className="">Open</a>
+          </Link>
         </button>
       </td>
     </tr>
   ));
 
   const listEmpty = (
+    <tr className="hover self-center center">
+      <td className="">Empty</td>
+      <td className=""></td>
+      <td className=""></td>
+      <td className=""></td>
+    </tr>
+  );
+
+  const listEmptyFiles = (
     <tr className="hover self-center center">
       <td className="">Empty</td>
       <td className=""></td>
@@ -309,12 +346,13 @@ function Home() {
           <table className="table w-full text-white">
             <thead className="bg-success">
               <tr>
-                <th className="bg-transparent">Name</th>
-                <th className="bg-transparent">File type</th>
+                <th className="bg-transparent">Id</th>
+                <th className="bg-transparent">Auditor</th>
+                <th className="bg-transparent">Status</th>
                 <th className="bg-transparent"></th>
               </tr>
             </thead>
-            <tbody>{listItems.length != -1 ? listEmpty : listAudits}</tbody>
+            <tbody>{listAudits.length == 0 ? listEmpty : listAudits}</tbody>
           </table>
         </div>
         <div className="w-full flex flex-col items-center ">
@@ -322,16 +360,17 @@ function Home() {
           <table className="table w-full text-white">
             <thead className="bg-success">
               <tr>
-                <th className="bg-transparent">Name</th>
-                <th className="bg-transparent">File type</th>
+                <th className="bg-transparent">Id</th>
+                <th className="bg-transparent">Owner</th>
+                <th className="bg-transparent">Status</th>
                 <th className="bg-transparent"></th>
               </tr>
             </thead>
-            <tbody>{listItems.length != -1 ? listEmpty : listShared}</tbody>
+            <tbody>{listShared.length == 0 ? listEmpty : listShared}</tbody>
           </table>
         </div>
       </div>
-      <div className="">
+      <div className="mt-10 mb-24 w-1/3 flex flex-col items-center">
         <h2 className="py-5 text-3xl">Your files</h2>
         <table className="table w-full text-white">
           <thead className="bg-success">
@@ -341,33 +380,9 @@ function Home() {
               <th className="bg-transparent"></th>
             </tr>
           </thead>
-          <tbody>{listItems.length == 0 ? listEmpty : listItems}</tbody>
+          <tbody>{listItems.length == 0 ? listEmptyFiles : listItems}</tbody>
         </table>
       </div>
-
-      <p className="text-gray-600 pt-5">Upload your audit report below</p>
-      <input onChange={(e) => deploy(e)} type="file" />
-      <input onChange={(e) => deployEncrypted(e)} type="file" />
-      <button onClick={() => decrypt()}>decrypt</button>
-      {fileURL ? (
-        <a href={fileURL} target="_blank">
-          viewFile
-        </a>
-      ) : null}
-      <button
-        onClick={() => {
-          applyAccessConditions();
-        }}
-      >
-        Apply Access Consitions
-      </button>
-      <button
-        onClick={() => {
-          getMyUploads();
-        }}
-      >
-        Get my files
-      </button>
     </div>
   );
 }

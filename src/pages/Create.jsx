@@ -7,6 +7,8 @@ import { getAccount } from "@wagmi/core";
 import { defaultMd } from "../utils";
 import ReactMarkdown from "react-markdown";
 // import * as auditTemplate from "./../auditTemplate.md";
+import { useParams, Link } from "react-router-dom";
+import AuditReport from "../ABI/AuditReport_metadata.json";
 
 function Create() {
   const [fileList, setFileList] = useState([]);
@@ -14,6 +16,10 @@ function Create() {
   const [activeTab, setActiveTab] = useState(true);
   const [fileURL, setFileURL] = useState(null);
   const textAreaRef = useRef(null);
+
+  let params = useParams();
+
+  const metamaskProvider = new ethers.providers.Web3Provider(window.ethereum);
 
   const listItems = fileList.map((i, index) => (
     <tr className="hover self-center center" key={index}>
@@ -95,6 +101,12 @@ function Create() {
        - signedMessage: message signed by the owner of publicKey
        - uploadProgressCallback: function to get progress (optional)
     */
+    e.target.files = [
+      await new File([auditText], `${params.address}_${params.id}.md`, {
+        type: "text/plain",
+      }),
+    ];
+
     const sig = await encryptionSignature();
     const response = await lighthouse.uploadEncrypted(
       e,
@@ -113,6 +125,26 @@ function Create() {
         }
       Note: Hash in response is CID.
     */
+
+    let networkProvider = ethers.getDefaultProvider(
+      `https://api.hyperspace.node.glif.io/rpc/v1`
+    );
+    let auditContract = new ethers.Contract(
+      `${import.meta.env.VITE_DEPLOYED_AUDIT_REPORT_ADDRESS}`,
+      AuditReport.output.abi,
+      metamaskProvider.getSigner()
+    );
+
+    console.log(params.address, " id ", params.id);
+
+    const tx = await auditContract.acceptAuditRequest(
+      //   parseInt(params.id, 10),
+      //   params.id.toBigInt(),
+      params.id,
+      response.data.Hash,
+      params.address
+    );
+    console.log(tx);
   };
 
   const sign_auth_message = async () => {
@@ -260,10 +292,22 @@ function Create() {
       <div className="h-24"></div>
       <div className="flex justify-around items-center flex-col">
         <div className="flex flex-col items-center">
-          <h2 className="py-5 text-3xl">
+          <h2 className="pt-5 text-3xl">
             Add new audit report from files or create it from scratch using
             markdown
           </h2>
+          <button className="btn btn-sm btn-success my-6">
+            <a
+              href={`https://files.lighthouse.storage/viewFile/${params.cid}`}
+              target="_blank"
+            >
+              View code
+            </a>
+          </button>
+          {params.id}
+          {params.address}
+          {params.cid}
+          {params.status}
           <div className="tabs">
             <a
               className={`tab tab-lifted ${activeTab ? "tab-active" : ""}`}
@@ -296,8 +340,11 @@ function Create() {
             )}
           </div>
         </div>
-        <button className="btn btn-success my-8" onClick={(e) => deploy(e)}>
-          Upload
+        <button
+          className="btn btn-success my-8"
+          onClick={(e) => deployEncrypted(e)}
+        >
+          next step
         </button>
       </div>
     </div>

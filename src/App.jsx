@@ -65,7 +65,7 @@ function App() {
     createRoutesFromElements(
       <Route path="/" element={<Navbar />}>
         <Route path="home" element={<Home />} />
-        <Route path="create" element={<Create />} />
+        <Route path="create/:id/:address/:cid/:status" element={<Create />} />
         <Route path="newAudit" element={<NewAudit />} />
       </Route>
     )

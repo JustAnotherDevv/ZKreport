@@ -52,7 +52,7 @@ function Navbar() {
       </div>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="create" element={<Create />} />
+        <Route path="create/:id/:address/:cid/:status" element={<Create />} />
         <Route path="newAudit" element={<NewAudit />} />
       </Routes>
     </div>
